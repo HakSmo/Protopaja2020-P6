@@ -18,7 +18,7 @@
 #include "crc_calc.hpp"
 #include <SPI.h>
 #include <ST7735_t3.h>
-
+#include "colorLut.h"
 #define CAMSERIAL Serial1
 #define TFT_MISO  12
 #define TFT_MOSI  11  //a12
@@ -168,8 +168,32 @@ void loop() {
       }
     }
   }*/
+  
+  // Not tested. It basically calls the 35 member lookup table from colorLut.h
   for(int j = 0; j<60; j++){
-    for(int i = 1; i<160; i++){
+    for(int i = 0; i<160; i++){
+      
+      if(pixelarray[i][j]==16008){
+        if(tft.readPixel(i,j) != 0xFFFF){
+          tft.drawPixel(i,j, 0xFFFF);
+        }
+      }else if(pixelarray[i][j] == 16002){
+        if(tft.readPixel(i,j) != 0xFFFF){
+          tft.drawPixel(i,j, 0xFFFF);
+        }
+      }else if(pixelarrray[i][j]<=7500){
+        if(tft.readPixel(i,j) != cololut[(int)pixelarray[i][j]/214]){
+          tft.drawPixel(i,j, cololut[(int)pixelarray[i][j]/214]);
+        }
+      }else{
+        tft.drawPixel(i,j, 0x0000);
+      }
+      
+    }
+  }
+  
+  for(int j = 0; j<60; j++){
+    for(int i = 0; i<160; i++){
       if(pixelarray[i][j]==16008){
         tft.drawPixel(i,j, 0xFFFF);
       }else if(pixelarray[i][j] == 16002){
