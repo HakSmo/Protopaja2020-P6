@@ -172,18 +172,18 @@ void loop() {
   // Not tested. It basically calls the 35 member lookup table from colorLut.h
   for(int j = 0; j<60; j++){
     for(int i = 0; i<160; i++){
-      
+      uint16_t target_pixel = tft.readPixel(i,j); // Read the pixel being handled, save for later use.
       if(pixelarray[i][j]==16008){
-        if(tft.readPixel(i,j) != 0xFFFF){
+        if(target_pixel != 0xFFFF){
           tft.drawPixel(i,j, 0xFFFF);
         }
       }else if(pixelarray[i][j] == 16002){
-        if(tft.readPixel(i,j) != 0xFFFF){
+        if(target_pixel != 0xFFFF){
           tft.drawPixel(i,j, 0xFFFF);
         }
-      }else if(pixelarrray[i][j]<=7500){
-        if(tft.readPixel(i,j) != cololut[(int)pixelarray[i][j]/214]){
-          tft.drawPixel(i,j, cololut[(int)pixelarray[i][j]/214]);
+      }else if(pixelarray[i][j]<=7500){
+        if(target_pixel != colorlut[(int)pixelarray[i][j]/214]){
+          tft.drawPixel(i,j, colorlut[(int)pixelarray[i][j]/214]);
         }
       }else{
         tft.drawPixel(i,j, 0x0000);

@@ -38,6 +38,8 @@
 #define IDENTIFY                    0x47
 #define GET_ERROR                   0x53
 
+#define SINGLE_PIC_SIZE             19288
+
 void stream_on(){
   unsigned char cmd[14] = {SND, GET_DIST, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0xAC, 0xA8, 0xCC};
   Serial1.write(cmd, 14);
