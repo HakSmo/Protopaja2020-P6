@@ -32,6 +32,12 @@ unsigned char single_frame[14] =  {SND, GET_DIST, 0x00, 0x00, 0x00, 0x00, 0x00, 
 unsigned char chip_info[14] =     {SND, GET_CHIP_INFORMATION,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x94,0x8B,0x2E,0xD5};
 unsigned char test_response[4] =  {0xFA, 0x03, 0x50, 0x4B};
 unsigned char disable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB7, 0xE8, 0xAA, 0x4B};
+unsigned char set_amplitude_limit_100[14] = {SND,SET_AMPLITUDE_LIMIT, 0x00, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE7, 0x34, 0xAE, 0x47};
+unsigned char set_amplitude_limit_0[14] = {SND,SET_AMPLITUDE_LIMIT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3C, 0x9B, 0xEA, 0x19};
+unsigned char set_amplitude_limit_5[14] = {SND,SET_AMPLITUDE_LIMIT, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x84, 0xBB, 0x14, 0xEF};
+unsigned char set_amplitude_limit_10[14] = {SND,SET_AMPLITUDE_LIMIT, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFB, 0xC7, 0xD7, 0xF0};
+uint16_t target_pixel; // Used for storing displays pixel data in camera data handling.
+uint16_t data_buf = 0;// Buffer for camera pixel data.
 
 void setup() {
   
@@ -49,12 +55,12 @@ void setup() {
   delay(1000);
   CAMSERIAL.begin(10000000);
 
-  //int crcmed = calcCrc32_32(median_filter, 10);
-  //Serial.println(crcmed, HEX);
-  /*Serial.println("Enable median filter:");
-  
-  CAMSERIAL.write(median_filter, 14);
-  for(int i = 0; i<8; i++){
+ /*int crcmed = calcCrc32_32(set_amplitude_limit_10, 10);
+ Serial.println(crcmed, HEX);
+ Serial.println("Enable median filter:");
+ 
+ CAMSERIAL.write(set_amplitude_limit_10, 14);
+   for(int i = 0; i<8; i++){
     for(;!CAMSERIAL.available(););
     if(CAMSERIAL.read() == 0x00 && i == 2){
       Serial.println("Command acknowledged");
@@ -66,7 +72,7 @@ void setup() {
   }*/
   
 }
-// define the 16 bit distance data array
+// define the 16 bit distance data array NOTE!: This is no longer needed if we can just write the data straight to display buffer.
 uint16_t pixelarray[160][60];
 
 void loop() {
@@ -102,75 +108,57 @@ void loop() {
     Serial.print(", ");
     Serial.println(ret[i]);
   }*/
-  int k = 84;//pixel data starts
-  uint16_t buf = 0;//buffer
-  for(int j = 0; j<60;j++){
-    for(int i = 0; i<160; i++){
-      buf = ret[k+1];
-      buf <<= 8;
-      buf |= ret[k];
-      buf <<=2;
-      buf >>=2;
-      pixelarray[i][j] = buf;
-      k +=2 ;
-    }
-  }
+
   /* Now the screen is operated using Teensy's own st7735_t3 library.
    * It is way more efficient and better optimized than adafruit's one and now
    * the screen works more smoothly.
    */
-  
-  tft.useFrameBuffer(true);   // starts framebuffer
-  /*for(int j = 0; j<60; j++){
-    for(int i = 1; i<160; i++){
-      if(pixelarray[i][j]==16008){
-        if(tft.readPixel(i,j) != 0xFFFF){
+  tft.useFrameBuffer(true);   // Start the framebuffer, so we can place the camera data straight to the corresponding pixel.
+  int camdata_hdr_size = 84;//pixel data starts
+  data_buf = 0;// Buffer for camera pixel data.
+  for(int j = 0; j<60;j++){
+    for(int i = 0; i<160; i++){
+      data_buf = ret[camdata_hdr_size+1];
+      data_buf <<= 8;
+      data_buf |= ret[camdata_hdr_size];
+      data_buf <<=2;
+      data_buf >>=2;
+      target_pixel = tft.readPixel(i,j); // Read the target pixel being handled, save for later use.
+      if(data_buf==16001){ //Case for low TOF amplitude.
+        if(target_pixel != 0xFFFF){
           tft.drawPixel(i,j, 0xFFFF);
         }
-      }else if(pixelarray[i][j] == 16002){
-        if(tft.readPixel(i,j) != 0xFFFF){
+      }else if(data_buf == 16002){ //Case for A/D conversion limit exceeded.
+        if(target_pixel != 0xE7E0){
+          tft.drawPixel(i,j, 0xE7E0);
+        }
+      }else if(data_buf == 16003){ //Case for pixel saturation.
+        if(target_pixel != 0x5FE0){
+          tft.drawPixel(i,j, 0x5FE0);
+        }
+      }else if(data_buf == 16007){ //Case for motion blur.
+        if(target_pixel != 0xF81E){
+          tft.drawPixel(i,j, 0xF81E);
+        }
+      }else if(data_buf == 16008){ //Case for edge detection.
+        if(target_pixel != 0xFFFF){
           tft.drawPixel(i,j, 0xFFFF);
         }
-      }else if(pixelarray[i][j]>7500){
-        if(tft.readPixel(i,j) != 0x0000){
-          tft.drawPixel(i,j, 0x0000);
-        }
-      }else if(pixelarray[i][j]>3000){
-        if(tft.readPixel(i,j) != 0xA800){
-          tft.drawPixel(i,j, 0xA800);
-        }
-      }else if(pixelarray[i][j]>2000){
-        if(tft.readPixel(i,j) != 0xF800){
-          tft.drawPixel(i,j, 0xF800);
-        }
-      }else if(pixelarray[i][j]>1500){
-        if(tft.readPixel(i,j) != 0xFC60){
-          tft.drawPixel(i,j, 0xFC60);
-        }
-      }else if(pixelarray[i][j]>1100){
-        if(tft.readPixel(i,j) != 0xFF80){
-          tft.drawPixel(i,j, 0xFF80);
-        }
-      }else if(pixelarray[i][j]>800){
-        if(tft.readPixel(i,j) != 0x07E0){
-          tft.drawPixel(i,j, 0x07E0);
-        }
-      }else if(pixelarray[i][j]>500){
-        if(tft.readPixel(i,j) != 0x07DF){
-          tft.drawPixel(i,j, 0x07DF);
-        }
-      }else if(pixelarray[i][j]<=500){
-        if(tft.readPixel(i,j) != 0x007F){
-          tft.drawPixel(i,j, 0x007F);
+      }else if(data_buf<=7500){
+        if(data_buf > 2000){Serial.println(data_buf); }
+        if(target_pixel != colorlut[data_buf/214]){
+          tft.drawPixel(i,j, colorlut[data_buf/214]);
         }
       }else{
         tft.drawPixel(i,j, 0x0000);
       }
+      camdata_hdr_size +=2 ;
     }
-  }*/
+  }
   
   // Not tested. It basically calls the 35 member lookup table from colorLut.h
-  for(int j = 0; j<60; j++){
+  // NOTE!: No longer needed if we can skip using pixelarray and update the camera data straight to display buffer.
+  /*for(int j = 0; j<60; j++){
     for(int i = 0; i<160; i++){
       uint16_t target_pixel = tft.readPixel(i,j); // Read the pixel being handled, save for later use.
       if(pixelarray[i][j]==16008){
@@ -189,34 +177,6 @@ void loop() {
         tft.drawPixel(i,j, 0x0000);
       }
       
-    }
-  }
-  
-  /*for(int j = 0; j<60; j++){
-    for(int i = 0; i<160; i++){
-      if(pixelarray[i][j]==16008){
-        tft.drawPixel(i,j, 0xFFFF);
-      }else if(pixelarray[i][j] == 16002){
-        tft.drawPixel(i,j, 0xFFFF);
-      }else if(pixelarray[i][j]>7500){
-        tft.drawPixel(i,j, 0x0000);
-      }else if(pixelarray[i][j]>3000){
-        tft.drawPixel(i,j, 0xA800);
-      }else if(pixelarray[i][j]>2000){
-        tft.drawPixel(i,j, 0xF800);
-      }else if(pixelarray[i][j]>1500){
-        tft.drawPixel(i,j, 0xFC60);
-      }else if(pixelarray[i][j]>1100){
-        tft.drawPixel(i,j, 0xFF80);
-      }else if(pixelarray[i][j]>800){
-        tft.drawPixel(i,j, 0x07E0);
-      }else if(pixelarray[i][j]>500){
-        tft.drawPixel(i,j, 0x07DF);
-      }else if(pixelarray[i][j]<=500){
-        tft.drawPixel(i,j, 0x007F);
-      }else{
-        tft.drawPixel(i,j, 0x0000);
-      }
     }
   }*/
   
