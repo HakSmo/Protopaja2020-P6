@@ -29,14 +29,9 @@
 ST7735_t3 tft = ST7735_t3(TFT_CS, TFT_DC, TFT_RST);
 const int ledPin = 13;
 unsigned char single_frame[14] =  {SND, GET_DIST, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0xAC, 0xA8, 0xCC};
-unsigned char chip_info[14] =     {SND, GET_CHIP_INFORMATION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x94, 0x8B, 0x2E, 0xD5};
-unsigned char test_response[4] =  {0xFA, 0x03, 0x50, 0x4B};
 unsigned char disable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 unsigned char enable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char set_amplitude_limit_100[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE7, 0x34, 0xAE, 0x47};
-unsigned char set_amplitude_limit_0[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3C, 0x9B, 0xEA, 0x19};
-unsigned char set_amplitude_limit_5[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x84, 0xBB, 0x14, 0xEF};
-unsigned char set_amplitude_limit[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char set_amplitude_limit[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Edit the 4th element to set the limit.
 uint16_t target_pixel; // Used for storing displays pixel data in camera data handling.
 uint16_t data_buf = 0;// Buffer for camera pixel data.
 void setup() {
@@ -54,13 +49,13 @@ void setup() {
 
   delay(1000);
   CAMSERIAL.begin(10000000);
-
+  // Use the send_command(unsigned char *command); function to send your command. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
   Serial.println("Setting amplitude limit");
-  send_command(set_amplitude_limit);
+  send_command_settings(set_amplitude_limit);
   Serial.println("Setting amplitude limit: DONE!");
 
-  Serial.println("Setting median filter");
-  send_command(disable_median_filter);
+  Serial.println("Setting median filter"); // Two options, disable_median_filter and enable_median_filter
+  send_command_settings(enable_median_filter);
   Serial.println("Setting median filter: DONE!");
 }
 // define the 16 bit distance data array NOTE!: This is no longer needed if we can just write the data straight to display buffer.
