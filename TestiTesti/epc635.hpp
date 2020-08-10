@@ -1,3 +1,4 @@
+#pragma once
 #include "epc635_commands.h"
 
 class Epc635{
