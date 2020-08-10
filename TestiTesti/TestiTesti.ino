@@ -49,7 +49,8 @@ void setup() {
 
   delay(1000);
   CAMSERIAL.begin(10000000);
-  // Use the send_command(unsigned char *command); function to send your command. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
+  /*Use the send_command_settings(unsigned char *command); function to set camera settings. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
+  NOTE!: This command is not to be used with GET type commands, only SET commands are viable.*/
   Serial.println("Setting amplitude limit");
   send_command_settings(set_amplitude_limit);
   Serial.println("Setting amplitude limit: DONE!");
@@ -118,30 +119,6 @@ void loop() {
       camdata_hdr_size += 2 ;
     }
   }
-
-  // Not tested. It basically calls the 35 member lookup table from colorLut.h
-  // NOTE!: No longer needed if we can skip using pixelarray and update the camera data straight to display buffer.
-  /*for(int j = 0; j<60; j++){
-    for(int i = 0; i<160; i++){
-      uint16_t target_pixel = tft.readPixel(i,j); // Read the pixel being handled, save for later use.
-      if(pixelarray[i][j]==16008){
-        if(target_pixel != 0xFFFF){
-          tft.drawPixel(i,j, 0xFFFF);
-        }
-      }else if(pixelarray[i][j] == 16002){
-        if(target_pixel != 0xFFFF){
-          tft.drawPixel(i,j, 0xFFFF);
-        }
-      }else if(pixelarray[i][j]<=7500){
-        if(target_pixel != colorlut[(int)pixelarray[i][j]/214]){
-          tft.drawPixel(i,j, colorlut[(int)pixelarray[i][j]/214]);
-        }
-      }else{
-        tft.drawPixel(i,j, 0x0000);
-      }
-
-    }
-    }*/
 
   tft.setCursor(2, 62);
   tft.setTextColor(0xFFFF, 0x0000);
