@@ -91,19 +91,19 @@ void loop() {
         target_pixel = data_buf;
         }
       if (data_buf == 16001) { //Case for low TOF amplitude.
-        tft.drawPixel(i, j, 0xFFFF);
+        tft.drawPixel(i, j, 0xF800); //= Red
         }
       else if (data_buf == 16002) { //Case for A/D conversion limit exceeded.
-        tft.drawPixel(i, j, 0xE7E0);
+        tft.drawPixel(i, j, 0xFD40); //= Orange
         }
       else if (data_buf == 16003) { //Case for pixel saturation.
-        tft.drawPixel(i, j, 0x5FE0);
+        tft.drawPixel(i, j, 0xF815); //= Pink
         }
       else if (data_buf == 16007) { //Case for motion blur.
-        tft.drawPixel(i, j, 0xF81E);
+        tft.drawPixel(i, j, 0xF01F); // = Purple
         }
       else if (data_buf == 16008) { //Case for edge detection.
-        tft.drawPixel(i, j, 0xFFFF);
+        tft.drawPixel(i, j, 0xFFFF); // = White
         }
       else if (data_buf <= 7500) { //Case for basic distances.
           tft.drawPixel(i, j, colorlut[data_buf / 214]);
