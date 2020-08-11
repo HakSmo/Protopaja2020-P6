@@ -49,8 +49,10 @@ void setup() {
 
   delay(1000);
   CAMSERIAL.begin(10000000);
+  
   /*Use the send_command_settings(unsigned char *command); function to set camera settings. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
   NOTE!: This command is not to be used with GET type commands, only SET commands are viable.*/
+  
   Serial.println("Setting amplitude limit");
   send_command_settings(set_amplitude_limit);
   Serial.println("Setting amplitude limit: DONE!");
@@ -87,39 +89,31 @@ void loop() {
       data_buf >>= 2;
       target_pixel = tft.readPixel(i, j); // Read the target pixel being handled, save for later use.
       if (data_buf == 16001) { //Case for low TOF amplitude.
-        if (target_pixel != 0xFFFF) {
-          tft.drawPixel(i, j, 0xFFFF);
-        }
-      } else if (data_buf == 16002) { //Case for A/D conversion limit exceeded.
-        if (target_pixel != 0xE7E0) {
-          tft.drawPixel(i, j, 0xE7E0);
-        }
-      } else if (data_buf == 16003) { //Case for pixel saturation.
-        if (target_pixel != 0x5FE0) {
-          tft.drawPixel(i, j, 0x5FE0);
-        }
-      } else if (data_buf == 16007) { //Case for motion blur.
-        if (target_pixel != 0xF81E) {
-          tft.drawPixel(i, j, 0xF81E);
-        }
-      } else if (data_buf == 16008) { //Case for edge detection.
-        if (target_pixel != 0xFFFF) {
-          tft.drawPixel(i, j, 0xFFFF);
-        }
-      } else if (data_buf <= 7500) { //Case for basic distances.
-        if (data_buf > 2000) {
-          Serial.println(data_buf);
-        }
-        if (target_pixel != colorlut[data_buf / 214]) {
+        tft.drawPixel(i, j, 0xFFFF);
+      }
+      else if (data_buf == 16002) { //Case for A/D conversion limit exceeded.
+        tft.drawPixel(i, j, 0xE7E0);
+      }
+      else if (data_buf == 16003) { //Case for pixel saturation.
+        tft.drawPixel(i, j, 0x5FE0);
+      }
+      else if (data_buf == 16007) { //Case for motion blur.
+        tft.drawPixel(i, j, 0xF81E);
+      }
+      else if (data_buf == 16008) { //Case for edge detection.
+        tft.drawPixel(i, j, 0xFFFF);
+      }
+      else if (data_buf <= 7500) { //Case for basic distances.
           tft.drawPixel(i, j, colorlut[data_buf / 214]);
-        }
-      } else {
+      }
+      else {
         tft.drawPixel(i, j, 0x0000);
       }
       camdata_hdr_size += 2 ;
     }
   }
 
+  /*Extra information printed on the screen*/
   tft.setCursor(2, 62);
   tft.setTextColor(0xFFFF, 0x0000);
   tft.setTextWrap(true);
@@ -128,13 +122,8 @@ void loop() {
   tft.print(" mm");
   tft.setCursor(2, 71);
   tft.print(millis() / 10);
-  // I don't want to print anything else to serial since it slows things down
-  /* for(int i = 0; i<60;i++){
-     for(int j = 0; j<160;j++){
-        print(pixelarray[j][i])
-     }
-     println("");
-    }*/
+
+  
   tft.updateScreen();         //update screen
   tft.freeFrameBuffer();      //Free framebuffer
   //CRC checksum:

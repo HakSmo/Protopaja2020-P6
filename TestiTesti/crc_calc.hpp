@@ -59,7 +59,7 @@ void send_command_settings(unsigned char *cam_command){
   
   char incoming_response[8]; // Initialize all the structures needed in handling the response and checking its validity.
   char incoming_byte = 0xFF;
-  while(incoming_byte == 0xFF){ // We wait for the cameras response. This is still WIP as it can get stuck into an infinite loop.
+  while(incoming_byte == 0xFF){ // We wait for the cameras response. NOTE!: This is still WIP as it can get stuck into an infinite loop.
     incoming_byte = CAMSERIAL.read();
     };
   incoming_response[0] = incoming_byte; // Once we get a response, immediately save the new non 0xFF byte into the first slot of the response.
