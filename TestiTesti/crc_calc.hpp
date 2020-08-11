@@ -31,8 +31,8 @@ void send_command_settings(unsigned char *cam_command){
     }
   Serial.println("\nCalculating crc for cam_command"); // Calculating the crc for the command.
   uint32_t crcmed = calcCrc32_32(cam_command, 10);
-  Serial.println("The crc is:");
-  Serial.println(crcmed, HEX);
+  //Serial.println("The crc is:");
+  //Serial.println(crcmed, HEX);
   Serial.println("Vectorifying the crc"); // Modify the uint32_t type crc into a vector of 4 unsigned char elements in the correct order.
   unsigned char crc_vect[4] = {
   (crcmed >> 0) & 0xFF,
@@ -40,20 +40,20 @@ void send_command_settings(unsigned char *cam_command){
   (crcmed >> 16) & 0xFF,
   (crcmed >> 24) & 0xFF
   };
-  Serial.println("Print the new crc vector."); // Print the new crc vector.
+  /*Serial.println("Print the new crc vector."); // Print the new crc vector.
   for(unsigned int i = 0; i < 4; i++){
     Serial.println(crc_vect[i], HEX);
-    }
-  Serial.println("Applying the crc to command and print the results"); // Apply the crc vector to the 4 last elements of the command.
+    }*/
+  //Serial.println("Applying the crc to command and print the results"); // Apply the crc vector to the 4 last elements of the command.
   for(unsigned int i = 0; i < 4; i++){
     cam_command[10+i] = crc_vect[i];
     }
-  for(unsigned int i = 0; i < 14; i++){
+  /*for(unsigned int i = 0; i < 14; i++){
     Serial.print(cam_command[i], HEX);
     Serial.print(" ");
-    }
-    
-  Serial.println("\nSending the command"); // Sending the command
+    }*/
+  //Serial.println("\n");
+  Serial.println("Sending the command"); // Sending the command
   CAMSERIAL.write(cam_command, 14);
   Serial.println("Waiting on response...");
   
@@ -74,25 +74,25 @@ void send_command_settings(unsigned char *cam_command){
   if(incoming_response[0] == CAM_ACK[0] && incoming_response[1] == CAM_ACK[1]){ 
     for (int i = 0; i < 8; i++) {
       if(incoming_response[i] != CAM_ACK[i]){
-        Serial.println("Response error!");
+        Serial.println("RESPONSE ERROR!");
         break;
         }
       }
-    Serial.println("Command acknowledged!");
+    Serial.println("COMMAND ACKNOWLEDGED!");
     return;
     }
    else if(incoming_response[0] == CAM_NACK[0] && incoming_response[1] == CAM_NACK[1]){
     for (int i = 0; i < 8; i++) {
       if(incoming_response[i] != CAM_NACK[i]){
-        Serial.println("Response error!");
+        Serial.println("RESPONSE ERROR!");
         break;
         }
       }
-    Serial.println("Command not acknowledged!");
+    Serial.println("COMMAND NOT ACKNOWLEDGED!");
     return;
     }
   else{
-    Serial.println("Response not identified");
+    Serial.println("RESPONSE NOT IDENTIFIED!");
     return;
     }
   }

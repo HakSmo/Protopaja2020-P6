@@ -9,12 +9,14 @@ unsigned char CAM_NACK[8] = {0xFA,0x01,0x00,0x00,0xDA,0xD7,0x6A,0x85};
 // SET COMMANDS
 
 #define SET_MOD_CHANNEL             0x0E
+#define SET_INTERFERENCE_DETECTION  0x11
+#define SET_EDGE_DETECTION          0x10
 #define SET_INT_TIME_DIST           0x00
 #define SET_OPERATION_MODE          0x04
 #define SET_HDR                     0x0D
 #define SET_ROI                     0x02
-#define SET_TEMPORAL_FILTER_WFOW    0x07
-#define SET_TEMPORAL_FILTER_NFOW    0x0F
+#define SET_TEMPORAL_FILTER_WFOV    0x07
+#define SET_TEMPORAL_FILTER_NFOV    0x0F
 #define SET_AVERAGE_FILTER          0x0A
 #define SET_MEDIAN_FILTER           0x0B
 #define SET_FRAME_RATE              0x0C

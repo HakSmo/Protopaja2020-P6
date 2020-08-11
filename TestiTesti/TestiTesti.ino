@@ -31,9 +31,28 @@ const int ledPin = 13;
 unsigned char single_frame[14] =  {SND, GET_DIST, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0xAC, 0xA8, 0xCC};
 unsigned char disable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 unsigned char enable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char set_amplitude_limit[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Edit the 4th element to set the limit.
+unsigned char disable_average_filter[14] = {SND, SET_AVERAGE_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char enable_average_filter[14] = {SND, SET_AVERAGE_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char set_temporal_filter_WFOV[14] = {SND, SET_TEMPORAL_FILTER_WFOV, 0x96, 0x00, 0x96, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char set_edge_detection[14] = {SND, SET_EDGE_DETECTION, 0xFA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00,0x00,0x00}; // Edit bytes 3 & 4 to set the threshold. Defeault 300 -> 12C -> 0x2C, 0x01.
+
+unsigned char set_amplitude_limit1[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Edit bytes 2 & 3 to set the limit. Limit1 default is 0x32, 0x00 
+unsigned char set_amplitude_limit2[14] = {SND, SET_AMPLITUDE_LIMIT, 0x01, 0x90, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit2 default is 0x64, 0x00
+unsigned char set_amplitude_limit3[14] = {SND, SET_AMPLITUDE_LIMIT, 0x02, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit3 default is 0xC8, 0x00
+unsigned char set_amplitude_limit4[14] = {SND, SET_AMPLITUDE_LIMIT, 0x03, 0xF4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit4 default is 0xFA, 0x01
+
+unsigned char set_int_time_dist1[14] = {SND, SET_INT_TIME_DIST, 0x00, 0x20, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // There are a total of 4 WFOV integration time slots.
+unsigned char set_int_time_dist2[14] = {SND, SET_INT_TIME_DIST, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Each can be given a different integration time.
+unsigned char set_int_time_dist3[14] = {SND, SET_INT_TIME_DIST, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // However, this is mostly used with Temporal HDR
+unsigned char set_int_time_dist4[14] = {SND, SET_INT_TIME_DIST, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // We do not have enough processing power for that.
+unsigned char set_int_time_distAUTO[14] = {SND, SET_INT_TIME_DIST, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+unsigned char set_hdr[14] =  {SND, SET_HDR, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char set_interference_detection[14] =  {SND, SET_INTERFERENCE_DETECTION, 0x01, 0x01, 0xF4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint16_t target_pixel; // Used for storing displays pixel data in camera data handling.
 uint16_t data_buf = 0;// Buffer for camera pixel data.
+int seconds = 0;
+int minutes = 0;
 void setup() {
 
   Serial.begin(9600);
@@ -53,13 +72,46 @@ void setup() {
   /*Use the send_command_settings(unsigned char *command); function to set camera settings. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
   NOTE!: This command is not to be used with GET type commands, only SET commands are viable.*/
   
-  Serial.println("Setting amplitude limit");
-  send_command_settings(set_amplitude_limit);
-  Serial.println("Setting amplitude limit: DONE!");
+  Serial.println("Setting amplitude limits...");
+  send_command_settings(set_amplitude_limit1);
+  send_command_settings(set_amplitude_limit2);
+  send_command_settings(set_amplitude_limit3);
+  send_command_settings(set_amplitude_limit4);
+  Serial.println("Setting amplitude limits: DONE!\n");
 
-  Serial.println("Setting median filter"); // Two options, disable_median_filter and enable_median_filter
+  Serial.println("Setting integration times...");
+  send_command_settings(set_int_time_dist1);
+  send_command_settings(set_int_time_dist2);
+  send_command_settings(set_int_time_dist3);
+  send_command_settings(set_int_time_dist4);
+  //send_command_settings(set_int_time_distAUTO);
+  Serial.println("Setting integration times: DONE!\n");
+
+  Serial.println("Setting edge detection treshold...");
+  send_command_settings(set_edge_detection);
+  Serial.println("Setting edge detection treshold: DONE!\n");
+
+  Serial.println("Setting interference detection...");
+  send_command_settings(set_interference_detection);
+  Serial.println("Setting interference detection: DONE!\n");
+
+  Serial.println("Setting average filter...");
+  send_command_settings(disable_average_filter);
+  Serial.println("Setting average filter: DONE!\n");
+  
+  Serial.println("Setting median filter..."); // Two options, disable_median_filter and enable_median_filter
   send_command_settings(enable_median_filter);
-  Serial.println("Setting median filter: DONE!");
+  Serial.println("Setting median filter: DONE!\n");
+
+  Serial.println("Setting WFOV temporal filter...");
+  send_command_settings(set_temporal_filter_WFOV);
+  Serial.println("Setting WFOV temporal filter: DONE!");
+  
+  Serial.println("Setting HDR...");
+  send_command_settings(set_hdr);
+  Serial.println("Setting HDR: DONE!\n");
+
+  Serial.println("All settings applied!");
 }
 // define the 16 bit distance data array NOTE!: This is no longer needed if we can just write the data straight to display buffer.
 uint16_t pixelarray[160][60];
@@ -88,16 +140,16 @@ void loop() {
       data_buf <<= 2;
       data_buf >>= 2;
       if(i == 80 && j == 30){
-        target_pixel = data_buf;
+          target_pixel = data_buf;
         }
       if (data_buf == 16001) { //Case for low TOF amplitude.
-        tft.drawPixel(i, j, 0xF800); //= Red
+        tft.drawPixel(i, j, 0x0000); //0x8410 = Gray
         }
       else if (data_buf == 16002) { //Case for A/D conversion limit exceeded.
         tft.drawPixel(i, j, 0xFD40); //= Orange
         }
       else if (data_buf == 16003) { //Case for pixel saturation.
-        tft.drawPixel(i, j, 0xF815); //= Pink
+        tft.drawPixel(i, j, 0xEFE0); //= Yellow
         }
       else if (data_buf == 16007) { //Case for motion blur.
         tft.drawPixel(i, j, 0xF01F); // = Purple
@@ -106,7 +158,7 @@ void loop() {
         tft.drawPixel(i, j, 0xFFFF); // = White
         }
       else if (data_buf <= 7500) { //Case for basic distances.
-          tft.drawPixel(i, j, colorlut[data_buf / 214]);
+          tft.drawPixel(i, j, colorlut3[data_buf / 214]);
         }
       else {
         tft.drawPixel(i, j, 0x0000);
@@ -119,22 +171,37 @@ void loop() {
   tft.setCursor(2, 62);
   tft.setTextColor(0xFFFF, 0x0000);
   tft.setTextWrap(true);
-  tft.print("Distance: ");
-  tft.print((float)target_pixel/1000);
-  tft.print(" m");
+  tft.print("Dist: ");
+  if(target_pixel <= 7500){
+    tft.print((float)target_pixel/1000);
+    tft.print(" m");
+    }
+  else{
+    tft.print("Distance 404!");
+    }
   tft.setCursor(2, 71);
-  tft.print(millis() / 10);
+  seconds = (millis() / 1000) - (minutes * 60);
+  if(seconds > 59){
+    seconds = 0;
+    minutes++;
+    }
+  tft.print("T+ ");
+  tft.print(minutes);
+  tft.print(" min");
+  tft.print(" ");
+  tft.print(seconds);
+  tft.print(" sec");
 
   
   tft.updateScreen();         //update screen
   tft.freeFrameBuffer();      //Free framebuffer
   //CRC checksum:
-  Serial.println("CRC:");
+  /*Serial.println("CRC:");
   for (int i = SINGLE_PIC_SIZE - 4; i < SINGLE_PIC_SIZE; i++) {
     Serial.println(ret[i], HEX);
   }
 
   Serial.println(crc, HEX);
-  Serial.print("Done!\n");
+  Serial.print("Done!\n");*/
 
 }
