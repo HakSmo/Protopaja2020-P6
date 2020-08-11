@@ -87,28 +87,30 @@ void loop() {
       data_buf |= ret[camdata_hdr_size];
       data_buf <<= 2;
       data_buf >>= 2;
-      target_pixel = tft.readPixel(i, j); // Read the target pixel being handled, save for later use.
+      if(i == 80 && j == 30){
+        target_pixel = data_buf;
+        }
       if (data_buf == 16001) { //Case for low TOF amplitude.
         tft.drawPixel(i, j, 0xFFFF);
-      }
+        }
       else if (data_buf == 16002) { //Case for A/D conversion limit exceeded.
         tft.drawPixel(i, j, 0xE7E0);
-      }
+        }
       else if (data_buf == 16003) { //Case for pixel saturation.
         tft.drawPixel(i, j, 0x5FE0);
-      }
+        }
       else if (data_buf == 16007) { //Case for motion blur.
         tft.drawPixel(i, j, 0xF81E);
-      }
+        }
       else if (data_buf == 16008) { //Case for edge detection.
         tft.drawPixel(i, j, 0xFFFF);
-      }
+        }
       else if (data_buf <= 7500) { //Case for basic distances.
           tft.drawPixel(i, j, colorlut[data_buf / 214]);
-      }
+        }
       else {
         tft.drawPixel(i, j, 0x0000);
-      }
+        }
       camdata_hdr_size += 2 ;
     }
   }
@@ -118,8 +120,8 @@ void loop() {
   tft.setTextColor(0xFFFF, 0x0000);
   tft.setTextWrap(true);
   tft.print("Distance: ");
-  tft.print(pixelarray[80][30]);
-  tft.print(" mm");
+  tft.print((float)target_pixel/1000);
+  tft.print(" m");
   tft.setCursor(2, 71);
   tft.print(millis() / 10);
 
