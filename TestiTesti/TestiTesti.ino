@@ -29,26 +29,6 @@
 ST7735_t3 tft = ST7735_t3(TFT_CS, TFT_DC, TFT_RST);
 const int ledPin = 13;
 unsigned char single_frame[14] =  {SND, GET_DIST, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0xAC, 0xA8, 0xCC};
-unsigned char disable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char enable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char disable_average_filter[14] = {SND, SET_AVERAGE_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char enable_average_filter[14] = {SND, SET_AVERAGE_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char set_temporal_filter_WFOV[14] = {SND, SET_TEMPORAL_FILTER_WFOV, 0x96, 0x00, 0x96, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char set_edge_detection[14] = {SND, SET_EDGE_DETECTION, 0xFA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00,0x00,0x00}; // Edit bytes 3 & 4 to set the threshold. Defeault 300 -> 12C -> 0x2C, 0x01.
-
-unsigned char set_amplitude_limit1[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Edit bytes 2 & 3 to set the limit. Limit1 default is 0x32, 0x00 
-unsigned char set_amplitude_limit2[14] = {SND, SET_AMPLITUDE_LIMIT, 0x01, 0x90, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit2 default is 0x64, 0x00
-unsigned char set_amplitude_limit3[14] = {SND, SET_AMPLITUDE_LIMIT, 0x02, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit3 default is 0xC8, 0x00
-unsigned char set_amplitude_limit4[14] = {SND, SET_AMPLITUDE_LIMIT, 0x03, 0xF4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit4 default is 0xFA, 0x01
-
-unsigned char set_int_time_dist1[14] = {SND, SET_INT_TIME_DIST, 0x00, 0x20, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // There are a total of 4 WFOV integration time slots.
-unsigned char set_int_time_dist2[14] = {SND, SET_INT_TIME_DIST, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Each can be given a different integration time.
-unsigned char set_int_time_dist3[14] = {SND, SET_INT_TIME_DIST, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // However, this is mostly used with Temporal HDR
-unsigned char set_int_time_dist4[14] = {SND, SET_INT_TIME_DIST, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // We do not have enough processing power for that.
-unsigned char set_int_time_distAUTO[14] = {SND, SET_INT_TIME_DIST, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-unsigned char set_hdr[14] =  {SND, SET_HDR, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-unsigned char set_interference_detection[14] =  {SND, SET_INTERFERENCE_DETECTION, 0x01, 0x01, 0xF4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint16_t target_pixel; // Used for storing displays pixel data in camera data handling.
 uint16_t data_buf = 0;// Buffer for camera pixel data.
 int seconds = 0;
@@ -62,13 +42,14 @@ void setup() {
   tft.initR(INITR_MINI160x80);  // Init ST7735S mini display
 
 
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setRotation(3);
+  tft.fillScreen(ST77XX_BLACK); // Fills the initial screen with black.
+  tft.setRotation(3); // Rotates the screen to proper form.
   Serial.println("Display initialized");
 
   delay(1000);
   CAMSERIAL.begin(10000000);
-  
+
+  // NOTE!: Premade SET commands can be found in epc635_commands.h file.
   /*Use the send_command_settings(unsigned char *command); function to set camera settings. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
   NOTE!: This command is not to be used with GET type commands, only SET commands are viable.*/
   
@@ -95,7 +76,7 @@ void setup() {
   send_command_settings(set_interference_detection);
   Serial.println("Setting interference detection: DONE!\n");
 
-  Serial.println("Setting average filter...");
+  Serial.println("Setting average filter..."); // Two options, disable_average_filter and enable_average_filter
   send_command_settings(disable_average_filter);
   Serial.println("Setting average filter: DONE!\n");
   
@@ -123,7 +104,6 @@ void loop() {
     for (; !CAMSERIAL.available(););
     ret[i] = CAMSERIAL.read();
   }
-  int crc = calcCrc32_32(ret, SINGLE_PIC_SIZE - 4);
 
   /* Now the screen is operated using Teensy's own st7735_t3 library.
      It is way more efficient and better optimized than adafruit's one and now
@@ -195,13 +175,5 @@ void loop() {
   
   tft.updateScreen();         //update screen
   tft.freeFrameBuffer();      //Free framebuffer
-  //CRC checksum:
-  /*Serial.println("CRC:");
-  for (int i = SINGLE_PIC_SIZE - 4; i < SINGLE_PIC_SIZE; i++) {
-    Serial.println(ret[i], HEX);
-  }
-
-  Serial.println(crc, HEX);
-  Serial.print("Done!\n");*/
 
 }

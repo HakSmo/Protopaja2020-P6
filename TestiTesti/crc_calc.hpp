@@ -24,16 +24,16 @@ uint32_t calcCrc32_32(const uint8_t *data, const uint32_t size){
 }
 
 void send_command_settings(unsigned char *cam_command){
-  Serial.println("Printing the command!"); // Print the received command
+  /*Serial.println("Printing the command!"); // Print the received command
   for(unsigned int i = 0; i < 14; i++){
     Serial.print(cam_command[i], HEX);
     Serial.print(" ");
-    }
-  Serial.println("\nCalculating crc for cam_command"); // Calculating the crc for the command.
+    }*/
+  //Serial.println("\nCalculating crc for cam_command"); // Calculating the crc for the command.
   uint32_t crcmed = calcCrc32_32(cam_command, 10);
   //Serial.println("The crc is:");
   //Serial.println(crcmed, HEX);
-  Serial.println("Vectorifying the crc"); // Modify the uint32_t type crc into a vector of 4 unsigned char elements in the correct order.
+ // Serial.println("Vectorifying the crc"); // Modify the uint32_t type crc into a vector of 4 unsigned char elements in the correct order.
   unsigned char crc_vect[4] = {
   (crcmed >> 0) & 0xFF,
   (crcmed >> 8) & 0xFF,
@@ -48,28 +48,34 @@ void send_command_settings(unsigned char *cam_command){
   for(unsigned int i = 0; i < 4; i++){
     cam_command[10+i] = crc_vect[i];
     }
+    
   /*for(unsigned int i = 0; i < 14; i++){
     Serial.print(cam_command[i], HEX);
     Serial.print(" ");
     }*/
+    
   //Serial.println("\n");
-  Serial.println("Sending the command"); // Sending the command
+  //Serial.println("Sending the command"); // Sending the command
   CAMSERIAL.write(cam_command, 14);
-  Serial.println("Waiting on response...");
+  //Serial.println("Waiting on response...");
   
   char incoming_response[8]; // Initialize all the structures needed in handling the response and checking its validity.
   char incoming_byte = 0xFF;
   while(incoming_byte == 0xFF){ // We wait for the cameras response. NOTE!: This is still WIP as it can get stuck into an infinite loop.
     incoming_byte = CAMSERIAL.read();
     };
+    
   incoming_response[0] = incoming_byte; // Once we get a response, immediately save the new non 0xFF byte into the first slot of the response.
-  Serial.print(incoming_response[0],HEX);
-  Serial.print(" ");
+  
   for (int i = 1; i < 8; i++) { // Read rest of the response.
     incoming_response[i] = CAMSERIAL.read();
+  }
+  
+  /*for(unsigned int i = 0; i < 8; i++){
     Serial.print(incoming_response[i],HEX);
     Serial.print(" ");
-  }
+    }*/
+    
   // Following structures will check whether the response was ACK, NACK or unidentifiable. At the end we return to main loop.
   if(incoming_response[0] == CAM_ACK[0] && incoming_response[1] == CAM_ACK[1]){ 
     for (int i = 0; i < 8; i++) {
