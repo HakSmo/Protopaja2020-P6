@@ -131,7 +131,7 @@ void loop() {
       else if (data_buf == 16003) { //Case for pixel saturation.
         tft.drawPixel(i, j, 0xEFE0); //= Yellow
         }
-      else if (data_buf == 16007) { //Case for motion blur.
+      else if (data_buf == 16007) { //Case for motion blur & Modulation interference.
         tft.drawPixel(i, j, 0xF01F); // = Purple
         }
       else if (data_buf == 16008) { //Case for edge detection.
