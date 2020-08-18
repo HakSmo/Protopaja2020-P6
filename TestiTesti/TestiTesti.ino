@@ -44,6 +44,14 @@ void setup() {
 
   tft.fillScreen(ST77XX_BLACK); // Fills the initial screen with black.
   tft.setRotation(3); // Rotates the screen to proper form.
+  const uint8_t mirrorTFT[]  = { 0x88, 0x28, 0x48, 0xE8 }; // Mirror+rotate
+  tft.sendCommand(
+    #ifdef ST77XX_MADCTL
+      ST77XX_MADCTL, // Current TFT lib
+    #else
+      ST7735_MADCTL, // Older TFT lib
+    #endif
+      &mirrorTFT[3], 1);
   Serial.println("Display initialized");
 
   delay(1000);
