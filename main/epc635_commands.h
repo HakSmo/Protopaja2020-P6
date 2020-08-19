@@ -1,0 +1,81 @@
+#pragma once
+#define SND                         0xF5
+#include <vector>
+
+// BASIC RESPONSES
+unsigned char CAM_ACK[8] = {0xFA,0x00,0x00,0x00,0xBC,0x7D,0x6A,0x77};
+unsigned char CAM_NACK[8] = {0xFA,0x01,0x00,0x00,0xDA,0xD7,0x6A,0x85};
+
+// SET COMMANDS
+
+#define SET_MOD_CHANNEL             0x0E
+#define SET_INTERFERENCE_DETECTION  0x11
+#define SET_EDGE_DETECTION          0x10
+#define SET_INT_TIME_DIST           0x00
+#define SET_OPERATION_MODE          0x04
+#define SET_HDR                     0x0D
+#define SET_ROI                     0x02
+#define SET_TEMPORAL_FILTER_WFOV    0x07
+#define SET_TEMPORAL_FILTER_NFOV    0x0F
+#define SET_AVERAGE_FILTER          0x0A
+#define SET_MEDIAN_FILTER           0x0B
+#define SET_FRAME_RATE              0x0C
+#define SET_AMPLITUDE_LIMIT         0x09
+#define STOP_STREAM                 0x28
+#define SET_COMPENSATION            0x55
+#define SET_ILLUMINATION_POWER      0x6C
+#define SET_DLL_STEP                0x06
+
+// GET COMMANDS
+
+#define GET_DIST                    0x20
+#define GET_DIST_GS                 0x29
+#define GET_DIST_AMPLITUDE          0x22
+#define GET_GS                      0x24
+#define GET_DCS                     0x25
+#define GET_CALIBRATION_INFO        0x57
+
+// MISC COMMANDS
+
+#define SET_OUTPUT                  0x51
+#define GET_INPUT                   0x52
+#define GET_TEMPERATURE             0x4A
+#define GET_TOFCOS_VERSION          0x49
+#define GET_CHIP_INFORMATION        0x48
+#define GET_PROD_DATE               0x50
+#define IDENTIFY                    0x47
+#define GET_ERROR                   0x53
+
+#define SINGLE_PIC_SIZE             19288
+
+// Pre-made setting commands
+//NOTE!: All values are to be given in HEX format, in "reverse" order and in two parts if the value surpasses 255 (FF in HEX). For example 300 is given as 0x2C,0x01 (12C)
+
+unsigned char disable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Simple two commands to disable and enable median filter
+unsigned char enable_median_filter[14] = {SND, SET_MEDIAN_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+unsigned char disable_average_filter[14] = {SND, SET_AVERAGE_FILTER, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //Simple two commands to disable and enable average filter.
+unsigned char enable_average_filter[14] = {SND, SET_AVERAGE_FILTER, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// In temporal filter, Bytes 0,1 are used to set the limit for change (In millimeters)
+// Bytes 2,3 are used to set the strength of the filter effect, however it also slows down the reaction to distance changes. Filter is disabled when this value is set to 1000.
+unsigned char set_temporal_filter_WFOV[14] = {SND, SET_TEMPORAL_FILTER_WFOV, 0x96, 0x00, 0x96, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+unsigned char set_edge_detection[14] = {SND, SET_EDGE_DETECTION, 0xFA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00,0x00,0x00,0x00}; // Edit bytes 3 & 4 to set the threshold. Defeault 300 -> 12C -> 0x2C, 0x01.
+
+unsigned char set_amplitude_limit1[14] = {SND, SET_AMPLITUDE_LIMIT, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Edit bytes 2 & 3 to set the limit. Limit1 default is 0x32, 0x00 
+unsigned char set_amplitude_limit2[14] = {SND, SET_AMPLITUDE_LIMIT, 0x01, 0x90, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit2 default is 0x64, 0x00
+unsigned char set_amplitude_limit3[14] = {SND, SET_AMPLITUDE_LIMIT, 0x02, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit3 default is 0xC8, 0x00
+unsigned char set_amplitude_limit4[14] = {SND, SET_AMPLITUDE_LIMIT, 0x03, 0xF4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Limit4 default is 0xFA, 0x01
+
+unsigned char set_int_time_dist1[14] = {SND, SET_INT_TIME_DIST, 0x00, 0x20, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // There are a total of 4 WFOV integration time slots.
+unsigned char set_int_time_dist2[14] = {SND, SET_INT_TIME_DIST, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Each can be given a different integration time.
+unsigned char set_int_time_dist3[14] = {SND, SET_INT_TIME_DIST, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // However, this is mostly used with Temporal HDR
+unsigned char set_int_time_dist4[14] = {SND, SET_INT_TIME_DIST, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // We do not have enough processing power for that.
+unsigned char set_int_time_distAUTO[14] = {SND, SET_INT_TIME_DIST, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+unsigned char set_hdr[14] =  {SND, SET_HDR, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Byte 0, sets the HDR to either disabled (0x00), Spatial (0x01) or Temporal (0x02).
+
+// In interference detection, 0 byte sets the detection to either disabled (0x00) or enabled (0x01). Byte 1 sets the detector to either mark the pixel with status code (0x00) or use last valid value (0x01)
+// Bytes 2,3 set the detection limit (Max value 500).
+unsigned char set_interference_detection[14] =  {SND, SET_INTERFERENCE_DETECTION, 0x01, 0x01, 0xF4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
