@@ -61,7 +61,7 @@ void setup() {
   /*Use the send_command_settings(unsigned char *command); function to set camera settings. You only need to send unsigned char command[14] with the command and data, crc is automatically calculated.
   NOTE!: This command is not to be used with GET type commands, only SET commands are viable.*/
   
-  Serial.println("Setting amplitude limits...");
+  /*Serial.println("Setting amplitude limits...");
   send_command_settings(set_amplitude_limit1);
   send_command_settings(set_amplitude_limit2);
   send_command_settings(set_amplitude_limit3);
@@ -98,7 +98,7 @@ void setup() {
   
   Serial.println("Setting HDR...");
   send_command_settings(set_hdr);
-  Serial.println("Setting HDR: DONE!\n");
+  Serial.println("Setting HDR: DONE!\n");*/
 
   Serial.println("All settings applied!");
 }
