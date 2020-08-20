@@ -41,10 +41,13 @@ void setup() {
   Serial.println("Init display");
   tft.initR(INITR_MINI160x80);  // Init ST7735S mini display
 
-
   tft.fillScreen(ST77XX_BLACK); // Fills the initial screen with black.
-  tft.setRotation(3); // Rotates the screen to proper form.
-  const uint8_t mirrorTFT[]  = { 0x88, 0x28, 0x48, 0xE8 }; // Mirror+rotate
+  tft.setRotation(3); // Rotates the display
+    
+  /* Since the display is being projected using a half-transparent mirror,
+   * we need to un-mirror the display.
+   */
+  const uint8_t mirrorTFT[]  = { 0x88, 0x28, 0x48, 0xE8 };
   tft.sendCommand(
     #ifdef ST77XX_MADCTL
       ST77XX_MADCTL, // Current TFT lib
@@ -106,20 +109,21 @@ void setup() {
 uint16_t pixelarray[160][60];
 
 void loop() {
+    
   uint8_t ret[SINGLE_PIC_SIZE];
-  CAMSERIAL.write(single_frame, 14);
-  for (int i = 0; i < SINGLE_PIC_SIZE; i++) {
+  CAMSERIAL.write(single_frame, 14);            // Send Camera the command to take a picture.  
+  for (int i = 0; i < SINGLE_PIC_SIZE; i++) {   // Reads Camera output
     for (; !CAMSERIAL.available(););
     ret[i] = CAMSERIAL.read();
   }
 
   /* Now the screen is operated using Teensy's own st7735_t3 library.
-     It is way more efficient and better optimized than adafruit's one and now
-     the screen works more smoothly.
-  */
-  tft.useFrameBuffer(true);   // Start the framebuffer, so we can place the camera data straight to the corresponding pixel.
-  int camdata_hdr_size = 84;//pixel data starts
-  data_buf = 0;// Buffer for camera pixel data.
+   * It is way more efficient and better optimized than adafruit's one and now
+   * the screen works more smoothly.
+   */
+  tft.useFrameBuffer(true);     // Start the framebuffer, so we can place the camera data straight to the corresponding pixel.
+  int camdata_hdr_size = 84;    //pixel data starts
+  data_buf = 0;                 // Buffer for camera pixel data.
   for (int j = 0; j < 60; j++) {
     for (int i = 0; i < 160; i++) {
       data_buf = ret[camdata_hdr_size + 1];
@@ -130,22 +134,22 @@ void loop() {
       if(i == 80 && j == 30){
           target_pixel = data_buf;
         }
-      if (data_buf == 16001) { //Case for low TOF amplitude.
+      if (data_buf == 16001) {       //Case for low TOF amplitude.
         tft.drawPixel(i, j, 0x0000); //0x8410 = Gray
         }
-      else if (data_buf == 16002) { //Case for A/D conversion limit exceeded.
+      else if (data_buf == 16002) {  //Case for A/D conversion limit exceeded.
         tft.drawPixel(i, j, 0xFD40); //= Orange
         }
-      else if (data_buf == 16003) { //Case for pixel saturation.
+      else if (data_buf == 16003) {  //Case for pixel saturation.
         tft.drawPixel(i, j, 0xEFE0); //= Yellow
         }
-      else if (data_buf == 16007) { //Case for motion blur & Modulation interference.
+      else if (data_buf == 16007) {  //Case for motion blur & Modulation interference.
         tft.drawPixel(i, j, 0xF01F); // = Purple
         }
-      else if (data_buf == 16008) { //Case for edge detection.
+      else if (data_buf == 16008) {  //Case for edge detection.
         tft.drawPixel(i, j, 0xFFFF); // = White
         }
-      else if (data_buf <= 7500) { //Case for basic distances.
+      else if (data_buf <= 7500) {   //Case for basic distances.
           tft.drawPixel(i, j, colorlut3[data_buf / 214]);
         }
       else {
@@ -156,18 +160,24 @@ void loop() {
   }
 
   /*Extra information printed on the screen*/
+    
+  // Sets the cursor below the camera image
   tft.setCursor(2, 62);
   tft.setTextColor(0xFFFF, 0x0000);
   tft.setTextWrap(true);
+    
+  // Prints the distance of the center pixel.
   tft.print("Dist: ");
   if(target_pixel <= 7500){
     tft.print((float)target_pixel/1000);
     tft.print(" m");
     }
   else{
-    tft.print("Distance 404!");
+    tft.print("Distance 404!"); // Distance not found!
     }
   tft.setCursor(2, 71);
+    
+  // Print time  
   seconds = (millis() / 1000) - (minutes * 60);
   if(seconds > 59){
     seconds = 0;
